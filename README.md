@@ -5,8 +5,6 @@ It includes basic HTTP authentication support.
 
 ## Installation
 
-In progress...
-
 Package is available on [Packagist](https://packagist.org/packages/sizeg/yii2-jwt),
 you can install it using [Composer](http://getcomposer.org).
 
