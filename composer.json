@@ -1,5 +1,5 @@
 {
-    "name": "sizeg/yii2-jwt-auth",
+    "name": "sizeg/yii2-jwt",
     "description": "JWT based on Icobucci",
     "require": {
         "php": ">=5.5.0",
