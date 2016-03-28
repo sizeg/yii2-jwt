@@ -3,11 +3,11 @@
     "description": "JWT based on Icobucci",
     "require": {
         "php": ">=5.5.0",
-        "lcobucci/jwt": "dev-master"
+        "lcobucci/jwt": "~3.1"
     },
     "autoload": {
         "psr-4": {
-            "sizeg\\jwt\\": "src"
+            "sizeg\\jwt\\": ""
         }
     }
 }
