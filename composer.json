@@ -1,0 +1,13 @@
+{
+    "name": "sizeg/yii2-jwt-auth",
+    "description": "JWT based on Icobucci",
+    "require": {
+        "php": ">=5.5.0",
+        "lcobucci/jwt": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "sizeg\\jwt\\": "src"
+        }
+    }
+}
