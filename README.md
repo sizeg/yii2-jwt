@@ -7,17 +7,18 @@ It includes basic HTTP authentication support.
 
 In progress...
 
-Package is available on [Packagist](http://packagist.org/packages/lcobucci/jwt),
+Package is available on [Packagist](https://packagist.org/packages/sizeg/yii2-jwt),
 you can install it using [Composer](http://getcomposer.org).
 
 ```shell
-composer require size/yii2-jwt
+composer require sizeg/yii2-jwt
 ```
 
 ### Dependencies
 
 - PHP 5.5+
 - OpenSSL Extension
+- [lcobucci/jwt 3.1](https://github.com/lcobucci/jwt/tree/3.1)
 
 ## Basic usage
 
