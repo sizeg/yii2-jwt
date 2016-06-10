@@ -34,7 +34,7 @@ class JwtTest extends \PHPUnit_Framework_TestCase
                 ->setNotBefore(time() + 60) // Configures the time that the token can be used (nbf claim)
                 ->setExpiration(time() + 3600) // Configures the expiration time of the token (nbf claim)
                 ->set('uid', 1) // Configures a new claim, called "uid"
-                ->sign($signer, 'testing') // creates a signature using "testing" as key
+                ->sign($signer, self::SECRET) // creates a signature using "testing" as key
                 ->getToken(); // Retrieves the generated token
     }
     
