@@ -83,7 +83,7 @@ class JwtTest extends \PHPUnit_Framework_TestCase
         $token = $this->createTokenWithSignature();
         $data = $this->getValidationData();
         $is_verify = $token->verify($this->getSignerSha256(), $this->jwt->key);
-        $is_valid = $token->validate($data); // false, because token is expired since current time is greater than exp
+        $is_valid = $token->validate($data); // true, because validation information is equals to data contained on the token
         $this->assertTrue($is_verify && $is_valid);
     }
     
