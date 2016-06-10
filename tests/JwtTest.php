@@ -36,7 +36,9 @@ class JwtTest extends \PHPUnit_Framework_TestCase
     public function setUp()
     {
         $this->jwt = \Yii::createObject(\sizeg\jwt\Jwt::className(), [
-            'key' => self::SECRET
+            'config' => [
+                'key' => self::SECRET,
+            ]
         ]);
     }
 
@@ -59,7 +61,7 @@ class JwtTest extends \PHPUnit_Framework_TestCase
                 ->setIssuedAt(time()) // Configures the time that the token was issue (iat claim)
                 ->setExpiration(time() + 3600) // Configures the expiration time of the token (nbf claim)
                 ->set('uid', 1) // Configures a new claim, called "uid"
-                ->sign($this->getSignerSha256(), self::SECRET) // creates a signature using "testing" as key
+                ->sign($this->getSignerSha256(), $this->jwt->key) // creates a signature using "testing" as key
                 ->getToken(); // Retrieves the generated token
     }
     
