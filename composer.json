@@ -3,7 +3,8 @@
     "description": "JWT based on Icobucci",
     "require": {
         "php": ">=5.5.0",
-        "lcobucci/jwt": "~3.1"
+        "lcobucci/jwt": "~3.1",
+        "yiisoft/yii2": "*"
     },
     "autoload": {
         "psr-4": {
