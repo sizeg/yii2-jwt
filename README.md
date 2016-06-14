@@ -1,5 +1,7 @@
 # Yii2 JWT
 
+![](https://travis-ci.org/sizeg/yii2-jwt.svg)
+
 This extension provides the [JWT](https://github.com/lcobucci/jwt) integration for the [Yii framework 2.0](http://www.yiiframework.com) (requires PHP 5.5+).
 It includes basic HTTP authentication support.
 
