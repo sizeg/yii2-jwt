@@ -97,8 +97,10 @@ class JwtHttpBearerAuth extends AuthMethod
      */
     public function challenge($response)
     {
-        $response->getHeaders()->set('WWW-Authenticate',
-            "{$this->schema} realm=\"{$this->realm}\", error=\"invalid_token\", error_description=\"The access token invalid or expired\"");
+        $response->getHeaders()->set(
+            'WWW-Authenticate',
+            "{$this->schema} realm=\"{$this->realm}\", error=\"invalid_token\", error_description=\"The access token invalid or expired\""
+        );
     }
 
     /**
