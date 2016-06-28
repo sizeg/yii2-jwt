@@ -61,7 +61,7 @@ class Jwt extends Component
      * @see [[Lcobucci\JWT\ValidationData::__construct()]]
      * @return ValidationData
      */
-    public function getValidationData(int $currentTime = null)
+    public function getValidationData($currentTime = null)
     {
         return new ValidationData($currentTime);
     }
@@ -73,7 +73,7 @@ class Jwt extends Component
      */
     public function loadToken($token, $validate = true, $verify = true)
     {
-        $token = $this->getParser()->parse((string) $token);
+        $token = $this->getParser()->parse((string)$token);
 
         if ($validate && !$this->validateToken($token)) {
             return null;
@@ -91,7 +91,7 @@ class Jwt extends Component
      * @param Token $token token object
      * @return bool
      */
-    public function validateToken(Token $token, int $currentTime = null)
+    public function validateToken(Token $token, $currentTime = null)
     {
         $data = $this->getValidationData($currentTime);
         // @todo Add claims for validation
