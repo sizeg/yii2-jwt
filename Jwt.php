@@ -73,7 +73,12 @@ class Jwt extends Component
      */
     public function loadToken($token, $validate = true, $verify = true)
     {
-        $token = $this->getParser()->parse((string)$token);
+        try {
+            $token = $this->getParser()->parse((string)$token);
+        } catch (\RuntimeException $e) {
+            Yii::warning("Invalid JWT provided: " . $e->getMessage(), 'jwt');
+            return null;
+        }
 
         if ($validate && !$this->validateToken($token)) {
             return null;
