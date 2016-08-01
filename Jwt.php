@@ -78,6 +78,9 @@ class Jwt extends Component
         } catch (\RuntimeException $e) {
             Yii::warning("Invalid JWT provided: " . $e->getMessage(), 'jwt');
             return null;
+        } catch (\InvalidArgumentException $e) {
+            Yii::warning("Invalid JWT provided: " . $e->getMessage(), 'jwt');
+            return null;
         }
 
         if ($validate && !$this->validateToken($token)) {
