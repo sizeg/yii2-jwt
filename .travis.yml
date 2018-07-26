@@ -4,15 +4,16 @@ php:
   - 5.5
   - 5.6
   - 7.0
-  - hhvm
+  - 7.1
+  - 7.2
 
 # faster builds on new travis setup not using sudo
 sudo: false
 
 install:
-  - composer global require "fxp/composer-asset-plugin:~1.4.4"
+#  - composer global require "fxp/composer-asset-plugin:~1.4.4"
   - export PATH="$HOME/.composer/vendor/bin:$PATH"
   - composer install --prefer-dist --no-interaction
 
-script:
-  - phpunit
+#script:
+#  - phpunit
