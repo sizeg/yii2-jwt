@@ -8,7 +8,8 @@
     },
 	"require-dev": {
 		"phpunit/phpunit": "^4.8",
-        "doctrine/instantiator": "1.0.5"
+        "doctrine/instantiator": "1.0.5",
+        "phpdocumentor/reflection-docblock": "3.2.2"
 	},
     "autoload": {
         "psr-4": {
