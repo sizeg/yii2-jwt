@@ -2,7 +2,7 @@
 
 namespace jwttests;
 
-class JwtTest extends \PHPUnit_Framework_TestCase
+class JwtTest extends \PHPUnit\Framework\TestCase
 {
 
     /**
@@ -35,7 +35,7 @@ class JwtTest extends \PHPUnit_Framework_TestCase
      */
     public function setUp()
     {
-        $this->jwt = \Yii::createObject(\sizeg\jwt\Jwt::className(), [
+        $this->jwt = \Yii::createObject(\sizeg\jwt\Jwt::class, [
             ['key' => self::SECRET]
         ]);
     }
