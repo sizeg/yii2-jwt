@@ -45,7 +45,7 @@ namespace app\controllers;
 use sizeg\jwt\JwtHttpBasicAuth;
 use yii\web\Controller;
 
-class ExampleControoller extends Controller
+class ExampleController extends Controller
 {
 
     /**
