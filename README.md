@@ -35,18 +35,31 @@ Add `jwt` component to your configuration file,
 
 ### REST authentication
 
-Configure the `authenticator` behavior as follows,
+Configure the `authenticator` behavior as follows.
+
+Controller,
 
 ```php
-use sizeg\jwt\JwtHttpBasicAuth;
+namespace app\controllers;
 
-public function behaviors()
+use sizeg\jwt\JwtHttpBasicAuth;
+use yii\web\Controller;
+
+class ExampleControoller extends Controller
 {
-    $behaviors = parent::behaviors();
-    $behaviors['authenticator'] = [
-        'class' => JwtHttpBasicAuth::className(),
-    ];
-    return $behaviors;
+
+    /**
+     * @inheritdoc
+     */
+    public function behaviors()
+    {
+        $behaviors = parent::behaviors();
+        $behaviors['authenticator'] = [
+            'class' => JwtHttpBasicAuth::class,
+        ];
+
+        return $behaviors;
+    }
 }
 ```
 
@@ -57,14 +70,15 @@ Also you can use it with `CompositeAuth` reffer to a [doc](http://www.yiiframewo
 Just use the builder to create a new JWT/JWS tokens:
 
 ```php
-$token = Yii::$app->jwt->getBuilder()->setIssuer('http://example.com') // Configures the issuer (iss claim)
-                        ->setAudience('http://example.org') // Configures the audience (aud claim)
-                        ->setId('4f1g23a12aa', true) // Configures the id (jti claim), replicating as a header item
-                        ->setIssuedAt(time()) // Configures the time that the token was issue (iat claim)
-                        ->setNotBefore(time() + 60) // Configures the time before which the token cannot be accepted (nbf claim)
-                        ->setExpiration(time() + 3600) // Configures the expiration time of the token (exp claim)
-                        ->set('uid', 1) // Configures a new claim, called "uid"
-                        ->getToken(); // Retrieves the generated token
+$token = Yii::$app->jwt->getBuilder()
+            ->setIssuer('http://example.com') // Configures the issuer (iss claim)
+            ->setAudience('http://example.org') // Configures the audience (aud claim)
+            ->setId('4f1g23a12aa', true) // Configures the id (jti claim), replicating as a header item
+            ->setIssuedAt(time()) // Configures the time that the token was issue (iat claim)
+            ->setNotBefore(time() + 60) // Configures the time before which the token cannot be accepted (nbf claim)
+            ->setExpiration(time() + 3600) // Configures the expiration time of the token (exp claim)
+            ->set('uid', 1) // Configures a new claim, called "uid"
+            ->getToken(); // Retrieves the generated token
 
 
 $token->getHeaders(); // Retrieves the token headers
@@ -124,15 +138,16 @@ use Lcobucci\JWT\Signer\Hmac\Sha256;
 
 $signer = new Sha256();
 
-$token = Yii::$app->jwt->getBuilder()->setIssuer('http://example.com') // Configures the issuer (iss claim)
-                        ->setAudience('http://example.org') // Configures the audience (aud claim)
-                        ->setId('4f1g23a12aa', true) // Configures the id (jti claim), replicating as a header item
-                        ->setIssuedAt(time()) // Configures the time that the token was issue (iat claim)
-                        ->setNotBefore(time() + 60) // Configures the time before which the token cannot be accepted (nbf claim)
-                        ->setExpiration(time() + 3600) // Configures the expiration time of the token (exp claim)
-                        ->set('uid', 1) // Configures a new claim, called "uid"
-                        ->sign($signer, 'testing') // creates a signature using "testing" as key
-                        ->getToken(); // Retrieves the generated token
+$token = Yii::$app->jwt->getBuilder()
+            ->setIssuer('http://example.com') // Configures the issuer (iss claim)
+            ->setAudience('http://example.org') // Configures the audience (aud claim)
+            ->setId('4f1g23a12aa', true) // Configures the id (jti claim), replicating as a header item
+            ->setIssuedAt(time()) // Configures the time that the token was issue (iat claim)
+            ->setNotBefore(time() + 60) // Configures the time before which the token cannot be accepted (nbf claim)
+            ->setExpiration(time() + 3600) // Configures the expiration time of the token (exp claim)
+            ->set('uid', 1) // Configures a new claim, called "uid"
+            ->sign($signer, 'testing') // creates a signature using "testing" as key
+            ->getToken(); // Retrieves the generated token
 
 
 var_dump($token->verify($signer, 'testing 1')); // false, because the key is different
@@ -151,15 +166,16 @@ $signer = new Sha256();
 
 $keychain = new Keychain();
 
-$token = Yii::$app->jwt->getBuilder()->setIssuer('http://example.com') // Configures the issuer (iss claim)
-                        ->setAudience('http://example.org') // Configures the audience (aud claim)
-                        ->setId('4f1g23a12aa', true) // Configures the id (jti claim), replicating as a header item
-                        ->setIssuedAt(time()) // Configures the time that the token was issue (iat claim)
-                        ->setNotBefore(time() + 60) // Configures the time before which the token cannot be accepted (nbf claim)
-                        ->setExpiration(time() + 3600) // Configures the expiration time of the token (exp claim)
-                        ->set('uid', 1) // Configures a new claim, called "uid"
-                        ->sign($signer,  $keychain->getPrivateKey('file://{path to your private key}')) // creates a signature using your private key
-                        ->getToken(); // Retrieves the generated token
+$token = Yii::$app->jwt->getBuilder()
+            ->setIssuer('http://example.com') // Configures the issuer (iss claim)
+            ->setAudience('http://example.org') // Configures the audience (aud claim)
+            ->setId('4f1g23a12aa', true) // Configures the id (jti claim), replicating as a header item
+            ->setIssuedAt(time()) // Configures the time that the token was issue (iat claim)
+            ->setNotBefore(time() + 60) // Configures the time before which the token cannot be accepted (nbf claim)
+            ->setExpiration(time() + 3600) // Configures the expiration time of the token (exp claim)
+            ->set('uid', 1) // Configures a new claim, called "uid"
+            ->sign($signer,  $keychain->getPrivateKey('file://{path to your private key}')) // creates a signature using your private key
+            ->getToken(); // Retrieves the generated token
 
 
 var_dump($token->verify($signer, $keychain->getPublicKey('file://{path to your public key}'))); // true when the public key was generated by the private one =)
