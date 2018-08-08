@@ -12,7 +12,6 @@ sudo: false
 
 install:
   - composer global require "fxp/composer-asset-plugin:~1.4.4"
-  - composer require bower-asset/inputmask
   - export PATH="$HOME/.composer/vendor/bin:$PATH"
   - composer install --prefer-dist --no-interaction
 
