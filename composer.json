@@ -15,5 +15,11 @@
         "psr-4": {
             "sizeg\\jwt\\": ""
         }
-    }
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://asset-packagist.org"
+        }
+    ]    
 }
