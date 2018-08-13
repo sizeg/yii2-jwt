@@ -27,8 +27,8 @@ Add `jwt` component to your configuration file,
 ```php
 'components' => [
     'jwt' => [
-        'class' => 'sizeg\jwt\Jwt',
-	    'key' => 'secret',
+      'class' => 'sizeg\jwt\Jwt',
+      'key'   => 'secret',
     ],
 ],
 ```
@@ -42,7 +42,7 @@ Controller,
 ```php
 namespace app\controllers;
 
-use sizeg\jwt\JwtHttpBasicAuth;
+use sizeg\jwt\JwtHttpBearerAuth;
 use yii\web\Controller;
 
 class ExampleController extends Controller
@@ -55,7 +55,7 @@ class ExampleController extends Controller
     {
         $behaviors = parent::behaviors();
         $behaviors['authenticator'] = [
-            'class' => JwtHttpBasicAuth::class,
+            'class' => JwtHttpBearerAuth::class,
         ];
 
         return $behaviors;
