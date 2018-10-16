@@ -22,20 +22,25 @@ use yii\base\InvalidParamException;
  */
 class Jwt extends Component
 {
-
     /**
      * @var array Supported algorithms
-     * @todo Add RSA, ECDSA suppport
      */
     public $supportedAlgs = [
         'HS256' => 'Lcobucci\JWT\Signer\Hmac\Sha256',
         'HS384' => 'Lcobucci\JWT\Signer\Hmac\Sha384',
         'HS512' => 'Lcobucci\JWT\Signer\Hmac\Sha512',
+        'RS256' => 'Lcobucci\JWT\Signer\Rsa\Sha256',
+        'RS384' => 'Lcobucci\JWT\Signer\Rsa\Sha384',
+        'RS512' => 'Lcobucci\JWT\Signer\Rsa\Sha512',
+        'ES256' => 'Lcobucci\JWT\Signer\Ecdsa\Sha256',
+        'ES384' => 'Lcobucci\JWT\Signer\Ecdsa\Sha384',
+        'ES512' => 'Lcobucci\JWT\Signer\Ecdsa\Sha512',
     ];
 
     /**
-     * @var string|array|null $key The key, or map of keys.
-     * @todo Add RSA, ECDSA key file support
+     * @var string Key
+     * This can be secret key string or path to the public key file.
+     * For path you can use Yii alias (starting with `@` character) or direct file path (starting with `file://`).
      */
     public $key;
 
@@ -122,6 +127,34 @@ class Jwt extends Component
 
         $signer = Yii::createObject($this->supportedAlgs[$alg]);
 
-        return $token->verify($signer, $this->key);
+        return $token->verify($signer, $this->prepareKey());
+    }
+    
+    /**
+     * Detects key file path and resolves Yii alias if given.
+     * @return string|null
+     * @throws \LogicException when file path does not exist or is not readable
+     */
+    public function prepareKey()
+    {
+        $keyPath = null;
+
+        if (strpos($this->key, '@') === 0) {
+            $keyPath = 'file://' . Yii::getAlias($this->key);
+        }
+
+        if (strpos($this->key, 'file://') === 0) {
+            $keyPath = $this->key;
+        }
+
+        if ($keyPath !== null) {
+            if (!file_exists($keyPath) || !is_readable($keyPath)) {
+                throw new \LogicException(sprintf('Key path "%s" does not exist or is not readable', $keyPath));
+            }
+
+            return $keyPath;
+        }
+
+        return $this->key;
     }
 }
