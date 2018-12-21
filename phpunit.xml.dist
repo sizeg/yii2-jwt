@@ -1,7 +1,18 @@
-<phpunit bootstrap="./tests/bootstrap.php">
+<?xml version="1.0" encoding="utf-8"?>
+<phpunit bootstrap="./tests/bootstrap.php"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         stopOnFailure="false">
     <testsuites>
-        <testsuite name="Hello World Test Suite">
-            <directory>./tests/</directory>
+        <testsuite name="Test Suite">
+            <directory>./tests</directory>
         </testsuite>
     </testsuites>
+    <filter>
+        <whitelist>
+            <directory suffix=".php">./</directory>
+        </whitelist>
+    </filter>
 </phpunit>

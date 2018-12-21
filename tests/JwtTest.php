@@ -1,8 +1,8 @@
 <?php
 
-namespace jwttests;
+namespace sizeg\jwt\tests;
 
-class JwtTest extends \PHPUnit\Framework\TestCase
+class JwtTest extends TestCase
 {
 
     /**
