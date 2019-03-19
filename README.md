@@ -182,3 +182,125 @@ var_dump($token->verify($signer, $keychain->getPublicKey('file://{path to your p
 ```
 
 **It's important to say that if you're using RSA keys you shouldn't invoke ECDSA signers (and vice-versa), otherwise ```sign()``` and ```verify()``` will raise an exception!**
+
+
+## How to start
+
+### Basic scheme
+
+1. Client send credentials. For example, login + password
+2. Backend validate them
+3. If credentials is valid client receive token
+4. Client store token for the future requests
+
+### Step-by-step usage example
+
+1. Create Yii2 application
+```
+composer create-project --prefer-dist --stability=dev yiisoft/yii2-app-basic yii2-jwt-test
+```
+In this example we will use [basic template](https://github.com/yiisoft/yii2-app-basic), but you can use [advanced template](https://github.com/yiisoft/yii2-app-advanced) in the same way.
+
+2. Install component
+```composer require sizeg/yii2-jwt```
+
+3. Add to config/web.php into `components` section
+```php
+$config = [
+    'components' => [
+        // other default components here..
+        'jwt' => [
+            'class' => 'sizeg\jwt\Jwt',
+            'key'   => 'secret',
+        ],
+    ],
+];
+```
+4. Change method `app\models\User::findIdentityByAccessToken()`
+```php
+    /**
+     * {@inheritdoc}
+     * @param \Lcobucci\JWT\Token $token
+     */
+    public static function findIdentityByAccessToken($token, $type = null)
+    {
+        foreach (self::$users as $user) {
+            if ($user['id'] === (string) $token->getClaim('uid')) {
+                return new static($user);
+            }
+        }
+
+        return null;
+    }
+```
+5. Create controller
+```php
+<?php
+
+namespace app\controllers;
+
+use sizeg\jwt\Jwt;
+use sizeg\jwt\JwtHttpBearerAuth;
+use Yii;
+use yii\rest\Controller;
+
+class RestController extends Controller
+{
+    /**
+     * @inheritdoc
+     */
+    public function behaviors()
+    {
+        $behaviors = parent::behaviors();
+        $behaviors['authenticator'] = [
+            'class' => JwtHttpBearerAuth::class,
+            'optional' => [
+                'login',
+            ],
+        ];
+
+        return $behaviors;
+    }
+
+    /**
+     * @return \yii\web\Response
+     */
+    public function actionLogin()
+    {
+        // here you can put some credentials validation logic
+        // so if it success we return token
+        $signer = new \Lcobucci\JWT\Signer\Hmac\Sha256();
+        /** @var Jwt $jwt */
+        $jwt = Yii::$app->jwt;
+        $token = $jwt->getBuilder()
+            ->setIssuer('http://example.com')// Configures the issuer (iss claim)
+            ->setAudience('http://example.org')// Configures the audience (aud claim)
+            ->setId('4f1g23a12aa', true)// Configures the id (jti claim), replicating as a header item
+            ->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
+            ->setExpiration(time() + 3600)// Configures the expiration time of the token (exp claim)
+            ->set('uid', 100)// Configures a new claim, called "uid"
+            ->sign($signer, $jwt->key)// creates a signature using [[Jwt::$key]]
+            ->getToken(); // Retrieves the generated token
+
+        return $this->asJson([
+            'token' => (string)$token,
+        ]);
+    }
+
+    /**
+     * @return \yii\web\Response
+     */
+    public function actionData()
+    {
+        return $this->asJson([
+            'success' => true,
+        ]);
+    }
+}
+```
+6. Send simple login request to get token. Here we does not send any credentials to simplify example. As we specify in `authenticator` behavior action `login` as optional the `authenticator` skip auth check for that action.
+![image](https://user-images.githubusercontent.com/4047591/54614758-c4d2e100-4a7e-11e9-9175-0f1742bf4047.png)
+7. First of all we try to send request to rest/data without token and getting error `Unauthorized`
+![image](https://user-images.githubusercontent.com/4047591/54615287-a3262980-4a7f-11e9-81a9-609f5cb443c7.png)
+8. Then we retry request but already adding `Authorization` header with our token
+![image](https://user-images.githubusercontent.com/4047591/54615245-8ee22c80-4a7f-11e9-9948-e3f801596c43.png)
