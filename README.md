@@ -5,6 +5,20 @@
 This extension provides the [JWT](https://github.com/lcobucci/jwt) integration for the [Yii framework 2.0](http://www.yiiframework.com) (requires PHP 5.5+).
 It includes basic HTTP authentication support.
 
+## Table of contents
+
+1. [Installation](#installation)
+1. [Dependencies](#dependencies)
+1. [Basic usage](#basicusage)
+   1. [Creating](#basicusage-creating)
+   1. [Parsing from strings](#basicusage-parsing)
+   1. [Validating](#basicusage-validating)
+1. [Token signature](#tokensign)
+   1. [Hmac](#tokensign-hmac)
+   1. [RSA and ECDSA](#tokensign-rsa-ecdsa)
+1. [Yii2 basic template example](#yii2basic-example)
+
+<a name="installation"></a>
 ## Installation
 
 Package is available on [Packagist](https://packagist.org/packages/sizeg/yii2-jwt),
@@ -14,12 +28,14 @@ you can install it using [Composer](http://getcomposer.org).
 composer require sizeg/yii2-jwt
 ```
 
-### Dependencies
+<a name="dependencies"></a>
+## Dependencies
 
 - PHP 5.5+
 - OpenSSL Extension
 - [lcobucci/jwt 3.2](https://github.com/lcobucci/jwt/tree/3.2)
 
+<a name="basicusage"></a>
 ## Basic usage
 
 Add `jwt` component to your configuration file,
@@ -33,19 +49,12 @@ Add `jwt` component to your configuration file,
 ],
 ```
 
-### REST authentication
-
 Configure the `authenticator` behavior as follows.
-
-Controller,
 
 ```php
 namespace app\controllers;
 
-use sizeg\jwt\JwtHttpBearerAuth;
-use yii\web\Controller;
-
-class ExampleController extends Controller
+class ExampleController extends \yii\rest\Controller
 {
 
     /**
@@ -55,7 +64,7 @@ class ExampleController extends Controller
     {
         $behaviors = parent::behaviors();
         $behaviors['authenticator'] = [
-            'class' => JwtHttpBearerAuth::class,
+            'class' => \sizeg\jwt\JwtHttpBearerAuth::class,
         ];
 
         return $behaviors;
@@ -65,6 +74,7 @@ class ExampleController extends Controller
 
 Also you can use it with `CompositeAuth` reffer to a [doc](http://www.yiiframework.com/doc-2.0/guide-rest-authentication.html).
 
+<a name="basicusage-creating"></a>
 ### Creating
 
 Just use the builder to create a new JWT/JWS tokens:
@@ -90,6 +100,7 @@ echo $token->getClaim('uid'); // will print "1"
 echo $token; // The string representation of the object is a JWT string (pretty easy, right?)
 ```
 
+<a name="basicusage-parsing"></a>
 ### Parsing from strings
 
 Use the parser to create a new token from a JWT string (using the previous token as example):
@@ -104,6 +115,7 @@ echo $token->getClaim('iss'); // will print "http://example.com"
 echo $token->getClaim('uid'); // will print "1"
 ```
 
+<a name="basicusage-validating"></a>
 ### Validating
 
 We can easily validate if the token is valid (using the previous token as example):
@@ -125,10 +137,12 @@ $data->setCurrentTime(time() + 4000); // changing the validation time to future
 var_dump($token->validate($data)); // false, because token is expired since current time is greater than exp
 ```
 
+<a name="tokensign"></a>
 ## Token signature
 
 We can use signatures to be able to verify if the token was not modified after its generation. This extension implements Hmac, RSA and ECDSA signatures (using 256, 384 and 512).
 
+<a name="tokensign-hmac"></a>
 ### Hmac
 
 Hmac signatures are really simple to be used:
@@ -154,6 +168,7 @@ var_dump($token->verify($signer, 'testing 1')); // false, because the key is dif
 var_dump($token->verify($signer, 'testing')); // true, because the key is the same
 ```
 
+<a name="tokensign-rsa-ecdsa"></a>
 ### RSA and ECDSA
 
 RSA and ECDSA signatures are based on public and private keys so you have to generate using the private key and verify using the public key:
@@ -183,8 +198,8 @@ var_dump($token->verify($signer, $keychain->getPublicKey('file://{path to your p
 
 **It's important to say that if you're using RSA keys you shouldn't invoke ECDSA signers (and vice-versa), otherwise ```sign()``` and ```verify()``` will raise an exception!**
 
-
-## How to start
+<a name="yii2basic-example"></a>
+## Yii2 basic template example
 
 ### Basic scheme
 
@@ -196,13 +211,18 @@ var_dump($token->verify($signer, $keychain->getPublicKey('file://{path to your p
 ### Step-by-step usage example
 
 1. Create Yii2 application
-```
-composer create-project --prefer-dist --stability=dev yiisoft/yii2-app-basic yii2-jwt-test
-```
-In this example we will use [basic template](https://github.com/yiisoft/yii2-app-basic), but you can use [advanced template](https://github.com/yiisoft/yii2-app-advanced) in the same way.
+
+    In this example we will use [basic template](https://github.com/yiisoft/yii2-app-basic), but you can use [advanced template](https://github.com/yiisoft/yii2-app-advanced) in the same way.
+
+    ```shell
+    composer create-project --prefer-dist --stability=dev yiisoft/yii2-app-basic yii2-jwt-test
+    ```
 
 2. Install component
-```composer require sizeg/yii2-jwt```
+
+    ```shell
+    composer require sizeg/yii2-jwt
+    ```
 
 3. Add to config/web.php into `components` section
 ```php
