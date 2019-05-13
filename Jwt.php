@@ -14,6 +14,9 @@ use Lcobucci\JWT\ValidationData;
 use Yii;
 use yii\base\Component;
 use yii\base\InvalidArgumentException;
+use yii\base\InvalidConfigException;
+use yii\caching\CacheInterface;
+use yii\di\Instance;
 
 /**
  * JSON Web Token implementation, based on this library:
@@ -21,6 +24,8 @@ use yii\base\InvalidArgumentException;
  *
  * @author Dmitriy Demin <sizemail@gmail.com>
  * @since 1.0.0-a
+ * @property bool|CacheInterface $blacklist
+ * @property bool $isBlacklistEnabled
  */
 class Jwt extends Component
 {
@@ -44,6 +49,11 @@ class Jwt extends Component
      * @var Key|string $key The key
      */
     public $key;
+
+    /**
+     * @var bool|CacheInterface Cache storage used for token blacklisting
+     */
+    private $_blacklist = false;
 
     /**
      * @see [[Lcobucci\JWT\Builder::__construct()]]
@@ -78,7 +88,7 @@ class Jwt extends Component
      * @return Token|null
      * @throws \Throwable
      */
-    public function loadToken($token, $validate = true, $verify = true)
+    public function loadToken($token, $validate = true, $verify = true, $checkBlacklist = true)
     {
         try {
             $token = $this->getParser()->parse((string) $token);
@@ -87,6 +97,10 @@ class Jwt extends Component
             return null;
         } catch (\InvalidArgumentException $e) {
             Yii::warning("Invalid JWT provided: " . $e->getMessage(), 'jwt');
+            return null;
+        }
+
+        if ($checkBlacklist && $this->isInBlacklist($token)) {
             return null;
         }
 
@@ -132,5 +146,67 @@ class Jwt extends Component
         $signer = Yii::createObject($this->supportedAlgs[$alg]);
 
         return $token->verify($signer, $this->key);
+    }
+
+    /**
+     * Invalidates token by adding it to blacklist
+     * @param Token $token
+     * @throws InvalidConfigException
+     */
+    public function invalidate(Token $token)
+    {
+        if (!$this->getIsBlacklistEnabled()) {
+            throw new InvalidConfigException('You must have the blacklist enabled to invalidate a token.');
+        }
+        $exp = $token->getClaim('exp', false);
+        $duration = null;
+        if ($exp !== false) {
+            $duration = $exp - time();
+            $duration += 24 * 60 * 60; // Add 24h more, in case if there are some issues with time on server.
+        }
+        $this->getBlacklist()->set($token->__toString(), true, $duration);
+    }
+
+    /**
+     * Checks whether token is in blacklist
+     * @param Token $token
+     * @return bool
+     */
+    public function isInBlacklist(Token $token)
+    {
+        if (!$this->getIsBlacklistEnabled()) {
+            throw new InvalidConfigException('You must have the blacklist enabled to invalidate a token.');
+        }
+        return $this->getBlacklist()->exists($token->__toString());
+    }
+
+    /**
+     * Checks whether blacklist is enabled.
+     * @return bool
+     */
+    public function getIsBlacklistEnabled()
+    {
+        return $this->getBlacklist() !== false;
+    }
+
+    /**
+     * Sets the cache component as blacklist provider.
+     * @param array|CacheInterface|bool $value the cache to be used by this data provider.
+     */
+    public function setBlacklist($value)
+    {
+        if ($value === false) {
+            $this->_blacklist = $value;
+        } else {
+            $this->_blacklist = Instance::ensure($value, 'yii\caching\CacheInterface');
+        }
+    }
+
+    /**
+     * @return bool|CacheInterface
+     */
+    public function getBlacklist()
+    {
+        return $this->_blacklist;
     }
 }
