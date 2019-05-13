@@ -186,7 +186,7 @@ class Jwt extends Component
      */
     public function getIsBlacklistEnabled()
     {
-        return $this->getBlacklist() !== false;
+        return $this->getBlacklist() instanceof CacheInterface;
     }
 
     /**
