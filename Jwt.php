@@ -160,7 +160,7 @@ class Jwt extends Component
         }
         $exp = $token->getClaim('exp', false);
         $duration = null;
-        if ($exp !== false) {
+        if ($exp !== false && $exp > time()) {
             $duration = $exp - time();
             $duration += 24 * 60 * 60; // Add 24h more, in case if there are some issues with time on server.
         }
