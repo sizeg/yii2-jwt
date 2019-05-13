@@ -100,7 +100,7 @@ class Jwt extends Component
             return null;
         }
 
-        if ($checkBlacklist && $this->isInBlacklist($token)) {
+        if ($this->getIsBlacklistEnabled() && $checkBlacklist && $this->isInBlacklist($token)) {
             return null;
         }
 
