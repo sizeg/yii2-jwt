@@ -29,15 +29,15 @@ class Jwt extends Component
      * @var array Supported algorithms
      */
     public $supportedAlgs = [
-        'HS256' => 'Lcobucci\JWT\Signer\Hmac\Sha256',
-        'HS384' => 'Lcobucci\JWT\Signer\Hmac\Sha384',
-        'HS512' => 'Lcobucci\JWT\Signer\Hmac\Sha512',
-        'ES256' => 'Lcobucci\JWT\Signer\Ecdsa\Sha256',
-        'ES384' => 'Lcobucci\JWT\Signer\Ecdsa\Sha384',
-        'ES512' => 'Lcobucci\JWT\Signer\Ecdsa\Sha512',
-        'RS256' => 'Lcobucci\JWT\Signer\Rsa\Sha256',
-        'RS384' => 'Lcobucci\JWT\Signer\Rsa\Sha384',
-        'RS512' => 'Lcobucci\JWT\Signer\Rsa\Sha512',
+        'HS256' => \Lcobucci\JWT\Signer\Hmac\Sha256::class,
+        'HS384' => \Lcobucci\JWT\Signer\Hmac\Sha384::class,
+        'HS512' => \Lcobucci\JWT\Signer\Hmac\Sha512::class,
+        'ES256' => \Lcobucci\JWT\Signer\Ecdsa\Sha256::class,
+        'ES384' => \Lcobucci\JWT\Signer\Ecdsa\Sha384::class,
+        'ES512' => \Lcobucci\JWT\Signer\Ecdsa\Sha512::class,
+        'RS256' => \Lcobucci\JWT\Signer\Rsa\Sha256::class,
+        'RS384' => \Lcobucci\JWT\Signer\Rsa\Sha384::class,
+        'RS512' => \Lcobucci\JWT\Signer\Rsa\Sha512::class,
     ];
 
     /**
@@ -46,7 +46,15 @@ class Jwt extends Component
     public $key;
 
     /**
+     * @var string|array|callable \sizeg\jwtJwtValidationData
+     * @see [[Yii::createObject()]]
+     */
+    public $jwtValidationData = JwtValidationData::class;
+
+    /**
      * @see [[Lcobucci\JWT\Builder::__construct()]]
+     * @param Encoder|null $encoder
+     * @param ClaimFactory|null $claimFactory
      * @return Builder
      */
     public function getBuilder(Encoder $encoder = null, ClaimFactory $claimFactory = null)
@@ -56,6 +64,8 @@ class Jwt extends Component
 
     /**
      * @see [[Lcobucci\JWT\Parser::__construct()]]
+     * @param Decoder|null $decoder
+     * @param ClaimFactory|null $claimFactory
      * @return Parser
      */
     public function getParser(Decoder $decoder = null, ClaimFactory $claimFactory = null)
@@ -67,14 +77,43 @@ class Jwt extends Component
      * @see [[Lcobucci\JWT\ValidationData::__construct()]]
      * @return ValidationData
      */
-    public function getValidationData($currentTime = null)
+    public function getValidationData()
     {
-        return new ValidationData($currentTime);
+        return Yii::createObject($this->jwtValidationData)->getValidationData();
+    }
+
+    /**
+     * @param string $alg
+     * @return Signer
+     */
+    public function getSigner($alg)
+    {
+        $class = $this->supportedAlgs[$alg];
+
+        return new $class();
+    }
+
+    /**
+     * @param strng $content
+     * @param string|null $passphrase
+     * @return Key
+     */
+    public function getKey($content = null, $passphrase = null)
+    {
+        $content = $content ?: $this->key;
+
+        if ($content instanceof Key) {
+            return $content;
+        }
+
+        return new Key($content, $passphrase);
     }
 
     /**
      * Parses the JWT and returns a token class
      * @param string $token JWT
+     * @param bool $validate
+     * @param bool $verify
      * @return Token|null
      * @throws \Throwable
      */
@@ -83,10 +122,10 @@ class Jwt extends Component
         try {
             $token = $this->getParser()->parse((string) $token);
         } catch (\RuntimeException $e) {
-            Yii::warning("Invalid JWT provided: " . $e->getMessage(), 'jwt');
+            Yii::warning('Invalid JWT provided: ' . $e->getMessage(), 'jwt');
             return null;
-        } catch (\InvalidArgumentException $e) {
-            Yii::warning("Invalid JWT provided: " . $e->getMessage(), 'jwt');
+        } catch (InvalidArgumentException $e) {
+            Yii::warning('Invalid JWT provided: ' . $e->getMessage(), 'jwt');
             return null;
         }
 
@@ -104,14 +143,16 @@ class Jwt extends Component
     /**
      * Validate token
      * @param Token $token token object
+     * @param int|null $currentTime
      * @return bool
      */
     public function validateToken(Token $token, $currentTime = null)
     {
-        $data = $this->getValidationData($currentTime);
-        // @todo Add claims for validation
-
-        return $token->validate($data);
+        $validationData = $this->getValidationData();
+        if ($currentTime !== null) {
+            $validationData->setCurrentTime($currentTime);
+        }
+        return $token->validate($validationData);
     }
 
     /**
