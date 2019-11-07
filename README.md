@@ -43,7 +43,7 @@ Add `jwt` component to your configuration file,
 ```php
 'components' => [
     'jwt' => [
-      'class' => \sizeg\jwt\Jwt:class,
+      'class' => \sizeg\jwt\Jwt::class,
       'key'   => 'secret',
     ],
 ],
