@@ -96,7 +96,7 @@ class JwtTest extends TestCase
      */
     private function getConfiguration()
     {
-        return $this->jwt->getConfiguratuionforSymmetricSigner($this->getSigner(), $this->getSigningKey());
+        return $this->jwt->getConfigurationForSymmetricSigner($this->getSigner(), $this->getSigningKey());
     }
 
     /**
