@@ -4,6 +4,7 @@ namespace sizeg\jwt;
 
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Claim\Factory as ClaimFactory;
+use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Parser;
 use Lcobucci\JWT\Parsing\Decoder;
 use Lcobucci\JWT\Parsing\Encoder;
@@ -173,5 +174,17 @@ class Jwt extends Component
         $signer = Yii::createObject($this->supportedAlgs[$alg]);
 
         return $token->verify($signer, $this->key);
+    }
+
+    /**
+     * @param Signer $signer
+     * @param Key $key
+     * @param Encoder|null $encoder
+     * @param Decoder|null $decoder
+     * @return Configuration
+     */
+    public function getConfiguratuionforSymmetricSigner(Signer $signer, Key $key, Encoder $encoder = null, Decoder $decoder = null)
+    {
+        return Configuration::forSymmetricSigner($signer, $key, $encoder, $decoder);
     }
 }
