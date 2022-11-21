@@ -1,6 +1,6 @@
 <?php
 
-namespace sizeg\jwt;
+namespace keurope\jwt;
 
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Claim\Factory as ClaimFactory;
