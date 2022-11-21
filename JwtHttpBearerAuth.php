@@ -1,6 +1,6 @@
 <?php
 
-namespace sizeg\jwt;
+namespace keurope\jwt;
 
 use yii\di\Instance;
 use yii\filters\auth\AuthMethod;
