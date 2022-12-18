@@ -1,102 +1,233 @@
 <?php
 
+declare(strict_types=1);
+
 namespace sizeg\jwt\tests;
+
+use DateTimeImmutable;
+use Lcobucci\JWT\Builder as BuilderInterface;
+use Lcobucci\JWT\Token as TokenInterface;
+use Lcobucci\JWT\Validation\Constraint\IdentifiedBy;
+use Lcobucci\JWT\Validation\Constraint\IssuedBy;
+use Lcobucci\JWT\Validation\Constraint\LooseValidAt;
+use Lcobucci\JWT\Validation\Constraint\PermittedFor;
+use Lcobucci\JWT\Validation\Constraint\SignedWith;
+use sizeg\jwt\Jwt;
+use sizeg\jwt\JwtKey;
+use sizeg\jwt\JwtSigner;
+use Yii;
+use yii\base\InvalidConfigException;
 
 class JwtTest extends TestCase
 {
 
     /**
-     * Secret key
+     *
      */
-    const SECRET = 'secret';
-    
+    private const TOKEN_ISSUED_BY = 'http://example.com';
+
     /**
-     * Issuer
+     *
      */
-    const ISSUER = 'http://example.com';
-    
+    private const TOKEN_PERMITTED_FOR = 'http://example.org';
+
     /**
-     * Audience
+     *
      */
-    const AUDIENCE = 'http://example.org';
-    
-    /**
-     * Id
-     */
-    const ID = '4f1g23a12aa';
+    private const TOKEN_IDENTIFIED_BY = '4f1g23a12aa';
 
     /**
      * @var Jwt
      */
-    public $jwt;
+    private Jwt $jwt;
 
     /**
-     * @ineritdoc
+     * @var Jwt
      */
-    public function setUp()
+    private Jwt $jwtSecured;
+
+    protected function setUp(): void
     {
-        $this->jwt = \Yii::createObject(\sizeg\jwt\Jwt::class, [
-            ['key' => self::SECRET]
+        parent::setUp();
+
+        $this->jwt = Yii::createObject(Jwt::class);
+
+        $this->jwtSecured = Yii::createObject([
+            'class' => Jwt::class,
+            'signer' => JwtSigner::HS256,
+            'signerKey' => JwtKey::PLAIN_TEXT,
+            'signerKeyContents' => random_bytes(32),
+            'signerKeyPassphrase' => 'secret',
+            'constraints' => [
+                function () {
+                    return new LooseValidAt(
+                        \Lcobucci\Clock\SystemClock::fromSystemTimezone(),
+                    );
+                },
+                function () {
+                    return new SignedWith(
+                        $this->jwtSecured->getSigner(),
+                        $this->jwtSecured->getSignerKey(),
+                    );
+                },
+            ],
         ]);
     }
 
     /**
-     * @return Sha256 signer
+     * @return BuilderInterface
      */
-    public function getSignerSha256()
+    private function getBuilder(): BuilderInterface
     {
-        return new \Lcobucci\JWT\Signer\Hmac\Sha256();
+        $now = new DateTimeImmutable();
+
+        return $this->jwt->getBuilder()
+            // Configures the issuer (iss claim)
+            ->issuedBy('http://example.com')
+            // Configures the audience (aud claim)
+            ->permittedFor('http://example.org')
+            // Configures the id (jti claim)
+            ->identifiedBy('4f1g23a12aa')
+            // Configures the time that the token was issue (iat claim)
+            ->issuedAt($now)
+            // Configures the time that the token can be used (nbf claim)
+            ->canOnlyBeUsedAfter($now->modify('+1 minute'))
+            // Configures the expiration time of the token (exp claim)
+            ->expiresAt($now->modify('+1 hour'))
+            // Configures a new claim, called "uid"
+            ->withClaim('uid', 1)
+            // Configures a new header, called "foo"
+            ->withHeader('foo', 'bar');
     }
 
-    /**
-     * @return Token created token
-     */
-    public function createTokenWithSignature()
+    private function buildUnsecuredToken(): TokenInterface
     {
-        return $this->jwt->getBuilder()->setIssuer(self::ISSUER) // Configures the issuer (iss claim)
-                ->setAudience(self::AUDIENCE) // Configures the audience (aud claim)
-                ->setId(self::ID, true) // Configures the id (jti claim), replicating as a header item
-                ->setIssuedAt(time()) // Configures the time that the token was issue (iat claim)
-                ->setExpiration(time() + 3600) // Configures the expiration time of the token (nbf claim)
-                ->set('uid', 1) // Configures a new claim, called "uid"
-                ->sign($this->getSignerSha256(), $this->jwt->key) // creates a signature using "testing" as key
-                ->getToken(); // Retrieves the generated token
-    }
-    
-    /**
-     * @return ValidationData
-     */
-    public function getValidationData()
-    {
-        $data = $this->jwt->getValidationData(); // It will use the current time to validate (iat, nbf and exp)
-        $data->setIssuer(self::ISSUER);
-        $data->setAudience(self::AUDIENCE);
-        $data->setId(self::ID);
-        return $data;
+        $now = new DateTimeImmutable();
+
+        return $this->jwt->getBuilder()
+            // Configures the issuer (iss claim)
+            ->issuedBy(self::TOKEN_ISSUED_BY)
+            // Configures the audience (aud claim)
+            ->permittedFor(self::TOKEN_PERMITTED_FOR)
+            // Configures the id (jti claim)
+            ->identifiedBy(self::TOKEN_IDENTIFIED_BY)
+            // Configures the time that the token was issue (iat claim)
+            ->issuedAt($now)
+            // Configures the time that the token can be used (nbf claim)
+            ->canOnlyBeUsedAfter($now->modify('+2 second'))
+            // Configures the expiration time of the token (exp claim)
+            ->expiresAt($now->modify('+10 second'))
+            // Configures a new claim, called "uid"
+            ->withClaim('uid', 1)
+            // Configures a new header, called "foo"
+            ->withHeader('foo', 'bar')
+            ->getToken(
+                $this->jwt->getSigner(),
+                $this->jwt->getSignerKey()
+            );
     }
 
-    /**
-     * Validate token with signature
-     */
-    public function testValidateTokenWithSignature()
+    private function buildSecuredHS256Token(): TokenInterface
     {
-        $token = $this->createTokenWithSignature();
-        $data = $this->getValidationData();
-        $is_verify = $token->verify($this->getSignerSha256(), $this->jwt->key);
-        $is_valid = $token->validate($data); // true, because validation information is equals to data contained on the token
-        $this->assertTrue($is_verify && $is_valid);
+//        $now = new DateTimeImmutable();
+        $clock = \Lcobucci\Clock\SystemClock::fromSystemTimezone();
+
+        return $this->jwtSecured->getBuilder()
+            // Configures the issuer (iss claim)
+            ->issuedBy(self::TOKEN_ISSUED_BY)
+            // Configures the audience (aud claim)
+            ->permittedFor(self::TOKEN_PERMITTED_FOR)
+            // Configures the id (jti claim)
+            ->identifiedBy(self::TOKEN_IDENTIFIED_BY)
+            // Configures the time that the token was issue (iat claim)
+            ->issuedAt($clock->now())
+            // Configures the time that the token can be used (nbf claim)
+            ->canOnlyBeUsedAfter($clock->now()->modify('+2 second'))
+            // Configures the expiration time of the token (exp claim)
+//            ->expiresAt($clock->now()->modify('+10 second'))
+            // Configures a new claim, called "uid"
+            ->withClaim('uid', 1)
+            // Configures a new header, called "foo"
+            ->withHeader('foo', 'bar')
+            ->getToken(
+                $this->jwtSecured->getSigner(JwtSigner::HS256),
+                $this->jwtSecured->getSignerKey(JwtKey::PLAIN_TEXT, $this->jwtSecured->signerKeyContents, $this->jwtSecured->signerKeyPassphrase)
+            );
     }
-    
-    /**
-     * Validate token timeout with signature
-     */
-    public function testValidateTokenTimeoutWithSignature()
+
+    public function testIssuingToken()
     {
-        $token = $this->createTokenWithSignature();
-        $data = $this->getValidationData();
-        $data->setCurrentTime(time() + 4000); // changing the validation time to future
-        $is_verify = $token->verify($this->getSignerSha256(), $this->jwt->key);
-        $is_valid = $token->validate($data); // false, because token is expired since current time is greater than exp
-        $this->assertFalse($is_verify && $is_valid);
+        $token = $this->buildUnsecuredToken();
+
+        $this->assertTrue($token instanceof TokenInterface, 'Token should implements \Lcobucci\JWT\Token.');
+    }
+
+    public function testParsingToken()
+    {
+        $jwt = $this->buildUnsecuredToken()->toString();
+
+        $token = $this->jwt->parse($jwt);
+
+        $this->assertTrue($token instanceof TokenInterface, 'Token should implements \Lcobucci\JWT\Token.');
+    }
+
+    public function testValidatingToken()
+    {
+        $jwt = $this->buildUnsecuredToken()->toString();
+
+        $token = $this->jwt->parse($jwt);
+
+        self::assertTrue($this->jwt->validate($token, new IdentifiedBy(self::TOKEN_IDENTIFIED_BY)), 'IdentifiedBy');
+
+        self::assertTrue($this->jwt->validate($token, new IssuedBy(self::TOKEN_ISSUED_BY)), 'IssuedBy');
+
+        self::assertTrue($this->jwt->validate($token, new PermittedFor(self::TOKEN_PERMITTED_FOR)), 'PermittedFor');
+
+        self::assertTrue($this->jwt->validate($token, new SignedWith($this->jwt->getSigner(), $this->jwt->getSignerKey())), 'SignedWith');
+    }
+
+    public function testIssuingHS256Token()
+    {
+        $token = $this->buildSecuredHS256Token();
+
+        $this->assertTrue($token instanceof TokenInterface, 'Token should implements \Lcobucci\JWT\Token.');
+    }
+
+    public function testParsingHS256Token()
+    {
+        $jwt = $this->buildSecuredHS256Token()->toString();
+
+        $token = $this->jwtSecured->parse($jwt);
+
+        $this->assertTrue($token instanceof TokenInterface, 'Token should implements \Lcobucci\JWT\Token.');
+    }
+
+    public function testValidatingHS256Token()
+    {
+        $jwt = $this->buildSecuredHS256Token()->toString();
+
+        $token = $this->jwtSecured->parse($jwt);
+
+        self::assertTrue($this->jwtSecured->validate($token, new IdentifiedBy(self::TOKEN_IDENTIFIED_BY)), 'IdentifiedBy');
+
+        self::assertTrue($this->jwtSecured->validate($token, new IssuedBy(self::TOKEN_ISSUED_BY)), 'IssuedBy');
+
+        self::assertTrue($this->jwtSecured->validate($token, new PermittedFor(self::TOKEN_PERMITTED_FOR)), 'PermittedFor');
+
+        self::assertTrue($this->jwtSecured->validate($token, new SignedWith(
+            $this->jwtSecured->getSigner(JwtSigner::HS256),
+            $this->jwtSecured->getSignerKey(JwtKey::PLAIN_TEXT)
+        )), 'SignedWith');
+    }
+
+    public function testLoadHS256Token()
+    {
+        $jwt = $this->buildSecuredHS256Token()->toString();
+
+        sleep(2);
+
+        $token = $this->jwtSecured->loadToken($jwt, true, true);
+
+        $this->assertTrue($token instanceof TokenInterface, 'Token should implements \Lcobucci\JWT\Token.');
     }
 }

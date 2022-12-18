@@ -2,6 +2,10 @@
 
 namespace sizeg\jwt;
 
+use Lcobucci\JWT\Encoding\CannotDecodeContent;
+use Lcobucci\JWT\Token as TokenInterface;
+use Lcobucci\JWT\Token\InvalidTokenStructure;
+use Lcobucci\JWT\Token\UnsupportedHeaderFound;
 use yii\di\Instance;
 use yii\filters\auth\AuthMethod;
 
@@ -15,14 +19,13 @@ use yii\filters\auth\AuthMethod;
  * {
  *     return [
  *         'bearerAuth' => [
- *             'class' => \sizeg\jwt\JwtHttpBearerAuth::className(),
+ *             'class' => \sizeg\jwt\JwtHttpBearerAuth::class,
  *         ],
  *     ];
  * }
  * ```
  *
  * @author Dmitriy Demin <sizemail@gmail.com>
- * @since 1.0.0-a
  */
 class JwtHttpBearerAuth extends AuthMethod
 {
@@ -33,16 +36,21 @@ class JwtHttpBearerAuth extends AuthMethod
     public $jwt = 'jwt';
 
     /**
+     * @var string the HTTP header name
+     */
+    public string $header = 'Authorization';
+
+    /**
      * @var string A "realm" attribute MAY be included to indicate the scope
      * of protection in the manner described in HTTP/1.1 [RFC2617].  The "realm"
      * attribute MUST NOT appear more than once.
      */
-    public $realm = 'api';
+    public string $realm = 'api';
 
     /**
      * @var string Authorization header schema, default 'Bearer'
      */
-    public $schema = 'Bearer';
+    public string $schema = 'Bearer';
 
     /**
      * @var callable a PHP callable that will authenticate the user with the JWT payload information
@@ -60,23 +68,24 @@ class JwtHttpBearerAuth extends AuthMethod
     public $auth;
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function init()
     {
         parent::init();
-        $this->jwt = Instance::ensure($this->jwt, Jwt::className());
+        $this->jwt = Instance::ensure($this->jwt, Jwt::class);
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function authenticate($user, $request, $response)
     {
-        $authHeader = $request->getHeaders()->get('Authorization');
+        $authHeader = $request->getHeaders()->get($this->header);
         if ($authHeader !== null && preg_match('/^' . $this->schema . '\s+(.*?)$/', $authHeader, $matches)) {
-            $token = $this->loadToken($matches[1]);
-            if ($token === null) {
+            try {
+                $token = $this->jwt->loadToken($matches[1]);
+            } catch (CannotDecodeContent|InvalidTokenStructure|UnsupportedHeaderFound $e) {
                 return null;
             }
 
@@ -93,7 +102,7 @@ class JwtHttpBearerAuth extends AuthMethod
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function challenge($response)
     {
@@ -101,15 +110,5 @@ class JwtHttpBearerAuth extends AuthMethod
             'WWW-Authenticate',
             "{$this->schema} realm=\"{$this->realm}\", error=\"invalid_token\", error_description=\"The access token invalid or expired\""
         );
-    }
-
-    /**
-     * Parses the JWT and returns a token class
-     * @param string $token JWT
-     * @return Token|null
-     */
-    public function loadToken($token)
-    {
-        return $this->jwt->loadToken($token);
     }
 }

@@ -8,13 +8,13 @@ use yii\console\Application;
  * Class TestCase
  * @author SiZE
  */
-class TestCase extends \PHPUnit_Framework_TestCase
+class TestCase extends \PHPUnit\Framework\TestCase
 {
 
     /**
      * @inheritdoc
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
         $this->mockApplication();
@@ -23,7 +23,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
     /**
      * @inheritdoc
      */
-    protected function tearDown()
+    protected function tearDown(): void
     {
         $this->destroyApplication();
         parent::tearDown();
