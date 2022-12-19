@@ -2,7 +2,7 @@
 
 ![](https://travis-ci.org/sizeg/yii2-jwt.svg)
 
-This extension provides the [JWT](https://github.com/lcobucci/jwt) integration for the [Yii framework 2.0](http://www.yiiframework.com) (requires PHP 5.6+).
+This extension provides the [JWT](https://github.com/lcobucci/jwt) integration for the [Yii framework 2.0](http://www.yiiframework.com) (requires PHP 7.4 or ^8.0).
 It includes basic HTTP authentication support.
 
 ## Table of contents
@@ -31,9 +31,9 @@ composer require sizeg/yii2-jwt
 <a name="dependencies"></a>
 ## Dependencies
 
-- PHP 5.6+
+- PHP 7.4 or 8.0+
 - OpenSSL Extension
-- [lcobucci/jwt 3.3](https://github.com/lcobucci/jwt/tree/3.3)
+- [lcobucci/jwt 4.2](https://github.com/lcobucci/jwt/tree/4.2.x)
 
 <a href="#basicusage"></a>
 ## Basic usage
@@ -106,7 +106,7 @@ $token = Yii::$app->jwt->getBuilder()
    // Configures a new claim, called "uid"
    ->withClaim('uid', 1)
    // Configures a new header, called "foo"
-   ->withHeader('foo', 'bar');
+   ->withHeader('foo', 'bar')
    // Builds a new token
    ->getToken($algorithm, $key);
    
@@ -215,7 +215,7 @@ You may configure component:
                     Yii::$app->jwt->getSignerKey()
                 );
             },
-         ],
+        ],
     ],
 ],
 ```
