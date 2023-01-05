@@ -88,7 +88,7 @@ final class Jwt extends Component implements JwtSigner, JwtKey
     /**
      * @var \Lcobucci\JWT\Validation\Constraint[]
      */
-    public array $constraints;
+    public array $constraints = [];
 
     /**
      * @return BuilderInterface
